@@ -3,15 +3,10 @@ package org.example.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.BankCustomer;
-import org.example.dao.CustomerEntity;
-import org.example.dao.CustomerRepository;
+import org.example.dao.IDao;
 import org.example.exception.BusinessException;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,49 +14,27 @@ import java.util.List;
 @Transactional
 public class BankCustomersService {
 
-    private final CustomerRepository customerRepository;
+    private final IDao iDao;
 
     public void createCustomer(BankCustomer bankCustomer) {
-        customerRepository.save(convertFromModelToEntity(bankCustomer));
+        iDao.saveInDatabase(bankCustomer);
     }
 
     public BankCustomer getCustomerDetail(String bankCustomerName) {
-        CustomerEntity customerEntity = customerRepository.findByCustomerName(bankCustomerName);
-        if (customerEntity != null) {
-            return convertFromEntityToModel(customerEntity);
+        BankCustomer bankCustomer = iDao.findBankCustomerByName(bankCustomerName);
+        if (bankCustomer != null) {
+            return bankCustomer;
         } else {
             throw new BusinessException("Bankcustomer : "+bankCustomerName+" not found");
         }
     }
 
     public void removeCustomer(String bankCustomerName) {
-        customerRepository.deleteByCustomerName(bankCustomerName);
+        iDao.deleteFromDatabase(bankCustomerName);
     }
 
     public void updateCustomer(String bankCustomerName, BankCustomer bankCustomerUpdated) {
-        customerRepository.save(new CustomerEntity());
+        iDao.updateInDatabase(bankCustomerName, bankCustomerUpdated);
     }
-
-    private CustomerEntity convertFromModelToEntity(BankCustomer bankCustomer) {
-        CustomerEntity customerEntity = new CustomerEntity();
-        customerEntity.setCustomerName(bankCustomer.name());
-        customerEntity.setCustomerAge(bankCustomer.age());
-        customerEntity.setCustomerCity(bankCustomer.city());
-        customerEntity.setCustomerState(bankCustomer.state());
-        customerEntity.setCustomerProfession(bankCustomer.profession());
-        return customerEntity;
-    }
-
-    private BankCustomer convertFromEntityToModel(CustomerEntity customerEntity) {
-       return new BankCustomer(
-                customerEntity.getCustomerName(),
-                customerEntity.getCustomerAge(),
-                customerEntity.getCustomerCity(),
-                customerEntity.getCustomerState(),
-                customerEntity.getCustomerProfession()
-       );
-    }
-
-
 
 }
